@@ -1,0 +1,151 @@
+:root {
+  /* Fluent 2 Mica Foundation Tokens */
+  --fluent-bg-canvas: #f4f6fb;
+  --fluent-mica-acrylic: rgba(255, 255, 255, 0.72);
+  --fluent-mica-card: rgba(255, 255, 255, 0.82);
+  --fluent-mica-card-hover: rgba(255, 255, 255, 0.95);
+  --fluent-border-subtle: rgba(226, 232, 240, 0.8);
+  --fluent-border-hairline: rgba(255, 255, 255, 0.9);
+  --fluent-text-primary: #0f172a;
+  --fluent-text-secondary: #475569;
+  --fluent-text-tertiary: #94a3b8;
+
+  /* Fluent 2 Colorful Accents */
+  --fluent-cobalt: #0066ff;
+  --fluent-cobalt-light: rgba(0, 102, 255, 0.08);
+  --fluent-iris: #6366f1;
+  --fluent-iris-light: rgba(99, 102, 241, 0.08);
+  --fluent-emerald: #10b981;
+  --fluent-emerald-light: rgba(16, 185, 129, 0.08);
+  --fluent-amber: #f59e0b;
+  --fluent-amber-light: rgba(245, 158, 11, 0.08);
+  --fluent-coral: #f43f5e;
+  --fluent-coral-light: rgba(244, 63, 94, 0.08);
+  --fluent-purple: #8b5cf6;
+  --fluent-purple-light: rgba(139, 92, 246, 0.08);
+  --fluent-cyan: #06b6d4;
+  --fluent-cyan-light: rgba(6, 182, 212, 0.08);
+
+  /* Animation */
+  --fluent-curve: cubic-bezier(0.16, 1, 0.3, 1);
+  --fluent-duration: 220ms;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--fluent-bg-canvas);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(0, 102, 255, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(6, 182, 212, 0.04) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--fluent-text-primary);
+  min-height: 100vh;
+}
+
+/* Mica Acrylic Translucent Surfaces */
+.fluent-mica-acrylic {
+  background: var(--fluent-mica-acrylic);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--fluent-border-hairline);
+}
+
+.fluent-card {
+  background: var(--fluent-mica-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    0 8px 24px -4px rgba(15, 23, 42, 0.04);
+  border-radius: 14px;
+  transition: all var(--fluent-duration) var(--fluent-curve);
+}
+
+.fluent-card:hover {
+  background: var(--fluent-mica-card-hover);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.03),
+    0 14px 32px -6px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+
+.fluent-button-primary {
+  background: linear-gradient(135deg, #0066ff 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 102, 255, 0.25);
+  transition: all var(--fluent-duration) var(--fluent-curve);
+}
+
+.fluent-button-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 6px 20px rgba(0, 102, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.fluent-badge {
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-width: 1px;
+}
+
+/* High-Density Compact Fluent 2 Utilities */
+.fluent-compact-card {
+  background: var(--fluent-mica-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  border-radius: 12px;
+  transition: all var(--fluent-duration) var(--fluent-curve);
+}
+
+.fluent-compact-card:hover {
+  background: var(--fluent-mica-card-hover);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.03),
+    0 8px 16px -3px rgba(15, 23, 42, 0.06);
+}
+
+.fluent-badge-sm {
+  font-weight: 700;
+  font-size: 0.6875rem;
+  line-height: 0.875rem;
+  letter-spacing: 0.02em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-width: 1px;
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+

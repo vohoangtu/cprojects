@@ -1,0 +1,48 @@
+{
+  "name": "@fluent/kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fluent 2 inspired, token-driven React primitives for Laravel/Inertia apps.",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./theme.css": "./src/theme.css",
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist",
+    "src/theme.css"
+  ],
+  "scripts": {
+    "contrast": "node scripts/contrast-check.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.0",
+    "jsdom": "^25.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.7"
+  }
+}

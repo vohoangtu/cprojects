@@ -1,0 +1,100 @@
+/* ============================================================
+ * @fluent-kit — theme.css  (v1, light-only, 2-tier token model)
+ * TIER 1 : primitive / scale   (internal, do NOT use in app code)
+ * TIER 2 : semantic            (PUBLIC API — app uses only these)
+ * TIER 2b: Fluent 2 aliases   (mapping only, for MS DS interop)
+ *
+ * Contract: token NAMES frozen at 0.1.0. Changing a name = major.
+ * Changing a VALUE (pointing elsewhere) = patch/minor, not breaking.
+ * ============================================================ */
+
+:root {
+  /* ---------- TIER 1: PRIMITIVE PALETTE ---------- */
+  --fluent-p-white:#ffffff;
+  --fluent-p-black:#000000;
+
+  --fluent-p-neutral-50:#f8fafc;   --fluent-p-neutral-100:#f1f5f9;
+  --fluent-p-neutral-200:#e2e8f0; --fluent-p-neutral-300:#cbd5e1;
+  --fluent-p-neutral-400:#94a3b8; --fluent-p-neutral-500:#64748b;
+  --fluent-p-neutral-600:#475569; --fluent-p-neutral-700:#334155;
+  --fluent-p-neutral-800:#1e293b; --fluent-p-neutral-900:#0f172a;
+
+  --fluent-p-cobalt-50:#eff6ff;   --fluent-p-cobalt-600:#2563eb;   --fluent-p-cobalt-700:#1d4ed8;
+  --fluent-p-emerald-50:#ecfdf5; --fluent-p-emerald-600:#059669; --fluent-p-emerald-700:#047857;
+  --fluent-p-amber-50:#fffbeb;   --fluent-p-amber-600:#d97706;   --fluent-p-amber-700:#b45309;
+  --fluent-p-rose-50:#fff1f2;    --fluent-p-rose-600:#e11d48;    --fluent-p-rose-700:#be123c;
+  --fluent-p-cyan-50:#ecfeff;    --fluent-p-cyan-600:#0891b2;    --fluent-p-cyan-700:#0e7490;
+
+  /* ---------- TIER 1: SCALE & SHAPE ---------- */
+  --fluent-radius-sm:4px; --fluent-radius-md:8px; --fluent-radius-lg:12px;
+  --fluent-radius-xl:16px; --fluent-radius-pill:9999px;
+  --fluent-space-1:4px; --fluent-space-2:8px; --fluent-space-3:12px;
+  --fluent-space-4:16px; --fluent-space-5:24px; --fluent-space-6:32px;
+  --fluent-font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fluent-font-size-xs:11px; --fluent-font-size-sm:12px; --fluent-font-size-md:14px; --fluent-font-size-lg:16px;
+  --fluent-font-weight-regular:400; --fluent-font-weight-medium:500;
+  --fluent-font-weight-semibold:600; --fluent-font-weight-bold:700;
+  --fluent-line-hairline:1px; --fluent-line-thick:2px;
+  --fluent-duration-fast:120ms; --fluent-duration-normal:220ms; --fluent-duration-slow:400ms;
+  --fluent-curve:cubic-bezier(0.16,1,0.3,1);
+  --fluent-z-dropdown:1000; --fluent-z-sticky:1100; --fluent-z-modal:1200; --fluent-z-toast:1300;
+
+  /* ---------- TIER 2: SEMANTIC (PUBLIC API) ---------- */
+  --fluent-text-primary:  var(--fluent-p-neutral-900);
+  --fluent-text-secondary:var(--fluent-p-neutral-600);
+  --fluent-text-tertiary: var(--fluent-p-neutral-600);   /* raised from 500: AA-safe margin */
+  --fluent-text-disabled: var(--fluent-p-neutral-500);   /* raised from 400: 4.76 on white */
+  --fluent-text-on-accent: var(--fluent-p-white);
+
+  --fluent-surface-base:  #f4f6fb;
+  --fluent-surface-1:     var(--fluent-p-white);
+  --fluent-surface-2:     var(--fluent-p-neutral-50);
+  --fluent-surface-3:     var(--fluent-p-neutral-100);
+  --fluent-surface-inverse:var(--fluent-p-neutral-900);
+  --fluent-surface-overlay:rgba(15,23,42,0.45);
+
+  /* border-subtle is DECORATIVE ONLY — below 3:1, not info-bearing */
+  --fluent-border-subtle: var(--fluent-p-neutral-200);
+  --fluent-border-default:var(--fluent-p-neutral-500); /* slate-400 = 2.56 FAILS 3:1 */
+  --fluent-border-strong: var(--fluent-p-neutral-600);
+  --fluent-border-focus:  var(--fluent-p-cobalt-600);
+
+  --fluent-accent:        var(--fluent-p-cobalt-600);
+  --fluent-accent-hover:  var(--fluent-p-cobalt-700);
+  --fluent-accent-subtle: var(--fluent-p-cobalt-50);
+
+  /* status: value = -600 (surface/decorative), -strong = -700 (text, AA) */
+  --fluent-success:        var(--fluent-p-emerald-600);
+  --fluent-success-strong: var(--fluent-p-emerald-700);
+  --fluent-success-subtle: var(--fluent-p-emerald-50);
+  --fluent-warning:        var(--fluent-p-amber-600);
+  --fluent-warning-strong: var(--fluent-p-amber-700);
+  --fluent-warning-subtle: var(--fluent-p-amber-50);
+  --fluent-danger:         var(--fluent-p-rose-600);
+  --fluent-danger-strong:  var(--fluent-p-rose-700);
+  --fluent-danger-subtle:  var(--fluent-p-rose-50);
+  --fluent-info:           var(--fluent-p-cyan-600);
+  --fluent-info-strong:    var(--fluent-p-cyan-700);
+  --fluent-info-subtle:    var(--fluent-p-cyan-50);
+
+  --fluent-shadow-1:0 1px 2px rgba(15,23,42,0.05);
+  --fluent-shadow-2:0 2px 8px rgba(15,23,42,0.07);
+  --fluent-shadow-8:0 8px 24px rgba(15,23,42,0.09);
+  --fluent-shadow-16:0 16px 48px rgba(15,23,42,0.12);
+
+  --fluent-density-compact:0.875;
+  --fluent-density-normal:1;
+
+  /* ---------- TIER 2b: Fluent 2 aliases ---------- */
+  --fluent-f2-neutral-background-1:var(--fluent-surface-1);
+  --fluent-f2-neutral-background-2:var(--fluent-surface-2);
+  --fluent-f2-neutral-foreground-1:var(--fluent-text-primary);
+  --fluent-f2-neutral-foreground-2:var(--fluent-text-secondary);
+  --fluent-f2-brand-background:var(--fluent-accent);
+  --fluent-f2-brand-foreground-1:var(--fluent-text-on-accent);
+  --fluent-f2-stroke-default:var(--fluent-border-default);
+  --fluent-f2-control-fill-default:var(--fluent-surface-1);
+  --fluent-f2-layer-background:var(--fluent-surface-1);
+}
+
+/* v1 = light only. Dark lands as [data-theme="dark"] overriding TIER 2 only. */
