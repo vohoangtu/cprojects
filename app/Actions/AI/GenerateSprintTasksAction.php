@@ -6,6 +6,7 @@ use App\Actions\Agile\CreateTaskAction;
 use App\Actions\Audit\RecordAuditLogAction;
 use App\Models\Project;
 use App\Models\Sprint;
+use App\Services\AI\AIService;
 use Illuminate\Support\Collection;
 
 class GenerateSprintTasksAction
@@ -13,6 +14,7 @@ class GenerateSprintTasksAction
     public function __construct(
         protected CreateTaskAction $createTaskAction,
         protected RecordAuditLogAction $recordAuditLogAction,
+        protected AIService $aiService,
     ) {}
 
     /**
@@ -38,50 +40,7 @@ class GenerateSprintTasksAction
             ]);
         }
 
-        $standardTaskTemplates = [
-            [
-                'code_suffix' => 'TSK-01',
-                'title' => 'Thiết kế Database Schema Migrations & Data Seeders',
-                'description' => "Khởi tạo các bảng cơ sở dữ liệu cốt lõi chuẩn 3NF, cấu hình khóa ngoại và indexes theo đặc tả ERD cho dự án {$project->name}.",
-                'points' => 5,
-                'status' => 'done',
-            ],
-            [
-                'code_suffix' => 'TSK-02',
-                'title' => 'Cài đặt Xác thực OIDC / JWT & Middleware RBAC',
-                'description' => 'Triển khai luồng xác thực bảo mật đa lớp, phân quyền theo vai trò (Lead SA, Tech Lead, Developer, QA).',
-                'points' => 5,
-                'status' => 'done',
-            ],
-            [
-                'code_suffix' => 'TSK-03',
-                'title' => 'Triển khai Action Classes & Nghiệp vụ Lõi',
-                'description' => 'Viết các Action xử lý đơn trách nhiệm (Single Responsibility), validation Form Requests và trả về DTO chuẩn.',
-                'points' => 8,
-                'status' => 'in_progress',
-            ],
-            [
-                'code_suffix' => 'TSK-04',
-                'title' => 'Tích hợp Sổ cái Kiểm toán Bất biến HMAC-SHA256',
-                'description' => 'Ghi log toàn vẹn dữ liệu cho mọi hành động tác động tới tài liệu kỹ thuật và chuyển pha SDLC.',
-                'points' => 5,
-                'status' => 'code_review',
-            ],
-            [
-                'code_suffix' => 'TSK-05',
-                'title' => 'Phát triển Giao diện SaaS Fluent 2 Mica Material (React 19)',
-                'description' => 'Thiết kế giao diện người dùng tối ưu hóa không gian, hỗ trợ tương tác mượt mà và trực quan hóa tiến độ SDLC.',
-                'points' => 8,
-                'status' => 'todo',
-            ],
-            [
-                'code_suffix' => 'TSK-06',
-                'title' => 'Thiết lập Bộ Kiểm Thử Tự Động Feature Tests (Coverage >= 80%)',
-                'description' => 'Viết PHPUnit feature tests kiểm thử toàn bộ luồng nghiệp vụ từ Controller đến Database, tích hợp CI pipeline.',
-                'points' => 5,
-                'status' => 'todo',
-            ],
-        ];
+        $standardTaskTemplates = $this->aiService->synthesizeSprintTasks($project);
 
         $createdTasks = collect();
         $existingCodes = $project->tasks()->pluck('task_code')->toArray();

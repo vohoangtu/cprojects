@@ -9,6 +9,8 @@ Route::get('/', function () {
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
 Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+Route::post('/projects/analyze-idea', [ProjectController::class, 'analyzeIdea'])->name('projects.analyze-idea');
+Route::post('/projects/create-from-idea', [ProjectController::class, 'createFromIdea'])->name('projects.create-from-idea');
 Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
 
 // Quality Gate Approval & Criteria Toggle

@@ -13,6 +13,7 @@ use App\Actions\Gates\ToggleGateCriteriaAction;
 use App\Actions\Integrations\IngestCIPipelineMetricsAction;
 use App\Actions\Operations\CalculateSLAMetricsAction;
 use App\Actions\Operations\LogProductionIncidentAction;
+use App\Actions\Phases\CalculatePhaseProgressAction;
 use App\Actions\Projects\CreateProjectAction;
 use App\Actions\RACI\AnalyzeRACIWorkloadAction;
 use App\Actions\RACI\AssignRACIRoleAction;
@@ -752,5 +753,99 @@ class SDLCWorkflowTest extends TestCase
         $cabSignoffs = $project->cabSignoffs()->where('release_version', 'v1.0.0-PROD')->get();
         $this->assertEquals(3, $cabSignoffs->count());
         $this->assertEquals(3, $cabSignoffs->where('decision', 'approved')->count());
+    }
+
+    public function test_can_dynamically_calculate_and_sync_all_7_phase_progress_rates(): void
+    {
+        $createAction = app(CreateProjectAction::class);
+        $calcAction = app(CalculatePhaseProgressAction::class);
+
+        $project = $createAction->execute([
+            'name' => 'Dự án Fintech Dynamic Progress 2026',
+            'code' => 'PRJ-FIN-2026',
+            'client_name' => 'Fintech Bank',
+            'project_type' => 'enterprise',
+        ]);
+
+        $rates = $calcAction->execute($project);
+
+        $this->assertCount(7, $rates);
+        foreach ($rates as $phaseNum => $rate) {
+            $this->assertIsInt($rate);
+            $this->assertGreaterThanOrEqual(0, $rate);
+            $this->assertLessThanOrEqual(100, $rate);
+        }
+
+        // Test project show route computes and loads phase metrics
+        $response = $this->get("/projects/{$project->id}");
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Projects/Show')
+            ->has('project.phases', 7)
+        );
+    }
+
+    public function test_can_analyze_project_idea_via_ai_endpoint(): void
+    {
+        $response = $this->postJson('/projects/analyze-idea', [
+            'idea_prompt' => 'Xây dựng hệ thống vé xe buýt thông minh SmartBus tích hợp mã QR động, thẻ NFC và định vị GPS thời gian thực',
+            'client_name' => 'MetroTrans Bus Corp',
+            'project_type' => 'enterprise',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+        $response->assertJsonStructure([
+            'success',
+            'analysis' => [
+                'name',
+                'code',
+                'client_name',
+                'domain',
+                'summary',
+                'functional_requirements',
+                'non_functional_requirements',
+                'architecture_recommendation',
+                'user_stories',
+                'initial_rtm',
+                'wbs_phases',
+            ],
+        ]);
+
+        $data = $response->json('analysis');
+        $this->assertNotEmpty($data['functional_requirements']);
+        $this->assertNotEmpty($data['user_stories']);
+    }
+
+    public function test_can_incubate_and_create_complete_project_from_idea(): void
+    {
+        $idea = 'Xây dựng sàn thương mại điện tử nông sản B2B AgriNext với cơ chế đấu giá trực tiếp, quản lý kho lạnh IoT và thanh toán bảo chứng ngân hàng';
+
+        $response = $this->post('/projects/create-from-idea', [
+            'idea_prompt' => $idea,
+            'client_name' => 'AgriTech Vietnam JSC',
+            'project_type' => 'enterprise',
+            'creator_name' => 'Võ Hoàng Tú',
+            'creator_role' => 'Lead Solution Architect',
+        ]);
+
+        $response->assertStatus(302);
+
+        $project = Project::latest()->first();
+        $this->assertNotNull($project);
+        $this->assertEquals(7, $project->phases()->count());
+        $this->assertGreaterThanOrEqual(10, $project->documents()->count());
+        $this->assertNotEmpty($project->rtmTraces);
+        $this->assertNotEmpty($project->tasks);
+
+        // Verify documents are domain-specific and not generic boilerplate
+        $brd = $project->documents()->where('doc_type', 'BRD')->first();
+        $this->assertNotNull($brd);
+        $this->assertStringContainsString('Nông Nghiệp', $brd->content.$project->name.$project->description);
+
+        $responseShow = $this->get("/projects/{$project->id}");
+        $responseShow->assertStatus(200);
     }
 }

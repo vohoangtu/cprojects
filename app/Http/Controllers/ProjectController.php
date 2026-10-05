@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Agile\CreateTaskAction;
 use App\Actions\Agile\UpdateTaskStatusAction;
+use App\Actions\AI\AnalyzeProjectIdeaAction;
 use App\Actions\AI\AuditProjectComplianceAction;
 use App\Actions\AI\BatchSynthesizeProjectDocumentsAction;
 use App\Actions\AI\EvaluateQualityGateAction;
@@ -25,7 +26,9 @@ use App\Actions\Integrations\IngestCIPipelineMetricsAction;
 use App\Actions\Integrations\IngestGitWebhookAction;
 use App\Actions\Operations\CalculateSLAMetricsAction;
 use App\Actions\Operations\LogProductionIncidentAction;
+use App\Actions\Phases\CalculatePhaseProgressAction;
 use App\Actions\Projects\CreateProjectAction;
+use App\Actions\Projects\CreateProjectFromIdeaAction;
 use App\Actions\RACI\AnalyzeRACIWorkloadAction;
 use App\Actions\RACI\AssignRACIRoleAction;
 use App\Actions\Release\PackageReleaseAction;
@@ -39,6 +42,7 @@ use App\Actions\Testing\ExecuteTestItemAction;
 use App\Models\AuditLog;
 use App\Models\ProductionIncident;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -78,6 +82,7 @@ class ProjectController extends Controller
         AnalyzeRACIWorkloadAction $raciWorkloadAction,
         CalculateSLAMetricsAction $slaAction,
         AuditProjectComplianceAction $complianceAction,
+        CalculatePhaseProgressAction $calculatePhaseProgressAction,
     ): Response {
         $project = $this->projectRepository->findById($id);
 
@@ -96,6 +101,8 @@ class ProjectController extends Controller
             'deploymentRollouts',
             'webhooks',
         ]);
+
+        $calculatePhaseProgressAction->execute($project);
 
         $rtmAnalysis = $analyzeRtmAction->execute($id);
         $auditVerification = $verifyAuditAction->execute($id);
@@ -136,6 +143,58 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project->id)
             ->with('success', 'Dự án và toàn bộ 7 Pha SDLC đã được khởi tạo thành công.');
+    }
+
+    /**
+     * Analyze a raw product idea or business challenge into structured SDLC specifications.
+     */
+    public function analyzeIdea(
+        Request $request,
+        AnalyzeProjectIdeaAction $analyzeAction,
+    ): JsonResponse {
+        $validated = $request->validate([
+            'idea_prompt' => 'required|string|min:5|max:5000',
+            'client_name' => 'nullable|string|max:255',
+            'project_type' => 'nullable|in:outsourcing,product,enterprise,rnd',
+            'budget' => 'nullable|numeric|min:0',
+        ]);
+
+        $analysis = $analyzeAction->execute(
+            ideaPrompt: $validated['idea_prompt'],
+            context: $validated,
+        );
+
+        return response()->json([
+            'success' => true,
+            'analysis' => $analysis,
+        ]);
+    }
+
+    /**
+     * Incubate and initialize a new enterprise SDLC project from an analyzed idea.
+     */
+    public function createFromIdea(
+        Request $request,
+        CreateProjectFromIdeaAction $createFromIdeaAction,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'idea_prompt' => 'required|string|min:5|max:5000',
+            'name' => 'nullable|string|max:255',
+            'code' => 'nullable|string|max:50|unique:projects,code',
+            'client_name' => 'nullable|string|max:255',
+            'project_type' => 'nullable|in:outsourcing,product,enterprise,rnd',
+            'budget' => 'nullable|numeric|min:0',
+        ]);
+
+        $project = $createFromIdeaAction->execute(
+            ideaPrompt: $validated['idea_prompt'],
+            overrides: $validated,
+            creatorName: $request->input('creator_name', 'Võ Hoàng Tú'),
+            creatorRole: $request->input('creator_role', 'Lead Solution Architect'),
+        );
+
+        return redirect()->route('projects.show', $project->id)
+            ->with('success', "Dự án '{$project->name}' đã được AI ươm mầm và sinh trọn bộ hồ sơ 7 pha SDLC thành công.");
     }
 
     /**

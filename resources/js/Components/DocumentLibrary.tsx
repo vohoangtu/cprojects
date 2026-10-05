@@ -77,6 +77,8 @@ interface DocumentLibraryProps {
     phases: Phase[];
     qualityGates: Gate[];
     currentPhaseNumber: number;
+    selectedPhaseFilter?: number | 'all';
+    onSelectPhaseFilter?: (phase: number | 'all') => void;
     onViewDoc: (doc: ProjectDoc) => void;
     onEditDoc: (doc: ProjectDoc) => void;
     onSignDoc: (docId: number) => void;
@@ -437,6 +439,8 @@ export function DocumentLibrary({
     phases,
     qualityGates,
     currentPhaseNumber,
+    selectedPhaseFilter: propPhaseFilter,
+    onSelectPhaseFilter,
     onViewDoc,
     onEditDoc,
     onSignDoc,
@@ -448,7 +452,16 @@ export function DocumentLibrary({
     isGeneratingAi = false,
     isBatchSigning = false,
 }: DocumentLibraryProps) {
-    const [selectedPhaseFilter, setSelectedPhaseFilter] = useState<number | 'all'>('all');
+    const [internalPhaseFilter, setInternalPhaseFilter] = useState<number | 'all'>('all');
+    const selectedPhaseFilter = propPhaseFilter !== undefined ? propPhaseFilter : internalPhaseFilter;
+
+    const handleSelectPhaseFilter = (phase: number | 'all') => {
+        if (onSelectPhaseFilter) {
+            onSelectPhaseFilter(phase);
+        }
+        setInternalPhaseFilter(phase);
+    };
+
     const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'review'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'timeline' | 'table'>('timeline');
@@ -644,7 +657,7 @@ export function DocumentLibrary({
                         </span>
                         <button
                             type="button"
-                            onClick={() => setSelectedPhaseFilter('all')}
+                            onClick={() => handleSelectPhaseFilter('all')}
                             className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                                 selectedPhaseFilter === 'all'
                                     ? 'bg-blue-600 text-white shadow-xs'
@@ -662,7 +675,7 @@ export function DocumentLibrary({
                                 <button
                                     key={num}
                                     type="button"
-                                    onClick={() => setSelectedPhaseFilter(num)}
+                                    onClick={() => handleSelectPhaseFilter(num)}
                                     className={`px-2 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 flex items-center gap-1 cursor-pointer ${
                                         isSelected
                                             ? 'bg-blue-600 text-white shadow-xs'
@@ -785,7 +798,7 @@ export function DocumentLibrary({
                     <button
                         type="button"
                         onClick={() => {
-                            setSelectedPhaseFilter('all');
+                            handleSelectPhaseFilter('all');
                             setStatusFilter('all');
                             setSearchQuery('');
                         }}

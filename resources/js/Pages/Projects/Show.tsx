@@ -260,13 +260,76 @@ interface PageProps {
 }
 
 const PHASE_METADATA = [
-    { num: 1, title: 'Yêu cầu & Khởi tạo', code: 'BRD/SRS', color: 'from-blue-600 to-blue-500', lightColor: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { num: 2, title: 'Kiến trúc & Thiết kế', code: 'SAD/C4', color: 'from-indigo-600 to-indigo-500', lightColor: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-    { num: 3, title: 'Kế hoạch & Phân bổ', code: 'WBS/RACI', color: 'from-emerald-600 to-emerald-500', lightColor: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { num: 4, title: 'Lập trình & Review', code: 'Code/PR', color: 'from-amber-600 to-amber-500', lightColor: 'bg-amber-50 text-amber-800 border-amber-200' },
-    { num: 5, title: 'QA/QC & Kiểm thử', code: 'STP/UAT', color: 'from-rose-600 to-rose-500', lightColor: 'bg-rose-50 text-rose-700 border-rose-200' },
-    { num: 6, title: 'Triển khai & Release', code: 'Runbook/CAB', color: 'from-purple-600 to-purple-500', lightColor: 'bg-purple-50 text-purple-700 border-purple-200' },
-    { num: 7, title: 'Vận hành & Hậu kiểm', code: 'SLA/Retro', color: 'from-cyan-600 to-cyan-500', lightColor: 'bg-cyan-50 text-cyan-800 border-cyan-200' },
+    {
+        num: 1,
+        title: 'Yêu cầu & Khởi tạo',
+        code: 'BRD/SRS',
+        primaryTab: 'rtm' as const,
+        primaryTabName: 'Ma Trận RTM',
+        objective: 'Khảo sát nghiệp vụ, lập tài liệu BRD/SRS, IEEE 830 và thiết lập ma trận truy vết yêu cầu (RTM).',
+        color: 'from-blue-600 to-blue-500',
+        lightColor: 'bg-blue-50 text-blue-700 border-blue-200'
+    },
+    {
+        num: 2,
+        title: 'Kiến trúc & Thiết kế',
+        code: 'SAD/C4',
+        primaryTab: 'deliverables' as const,
+        primaryTabName: 'Hồ Sơ SAD & Sơ Đồ C4',
+        objective: 'Thiết kế kiến trúc hệ thống SAD, mô hình C4 Model, cơ sở dữ liệu ERD, OpenAPI và an ninh STRIDE.',
+        color: 'from-indigo-600 to-indigo-500',
+        lightColor: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    },
+    {
+        num: 3,
+        title: 'Kế hoạch & Phân bổ',
+        code: 'WBS/RACI',
+        primaryTab: 'raci' as const,
+        primaryTabName: 'Ma Trận RACI',
+        objective: 'Phân rã cấu trúc công việc WBS (< 40h), phân định trách nhiệm CMMI theo ma trận RACI và kế hoạch Sprint.',
+        color: 'from-emerald-600 to-emerald-500',
+        lightColor: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    },
+    {
+        num: 4,
+        title: 'Lập trình & Review',
+        code: 'Code/PR',
+        primaryTab: 'kanban' as const,
+        primaryTabName: 'Agile & Kanban',
+        objective: 'Thực thi các Sprints, quản lý Kanban, kiểm thử mã nguồn, SAST scan và kiểm soát chất lượng qua CI/CD Pipeline.',
+        color: 'from-amber-600 to-amber-500',
+        lightColor: 'bg-amber-50 text-amber-800 border-amber-200'
+    },
+    {
+        num: 5,
+        title: 'QA/QC & Kiểm thử',
+        code: 'STP/UAT',
+        primaryTab: 'testing' as const,
+        primaryTabName: 'Trung Tâm Test Runs',
+        objective: 'Thực thi kịch bản kiểm thử (Test Runs), quản lý lỗi khiếm khuyết (Defects) và ký biên bản nghiệm thu UAT.',
+        color: 'from-rose-600 to-rose-500',
+        lightColor: 'bg-rose-50 text-rose-700 border-rose-200'
+    },
+    {
+        num: 6,
+        title: 'Triển khai & Release',
+        code: 'Runbook/CAB',
+        primaryTab: 'release_cab' as const,
+        primaryTabName: 'CAB & Canary Rollout',
+        objective: 'Hội đồng CAB 3 bên phê duyệt, kiểm soát kịch bản Runbook từng phút, điều phối Canary và đóng gói phát hành.',
+        color: 'from-purple-600 to-purple-500',
+        lightColor: 'bg-purple-50 text-purple-700 border-purple-200'
+    },
+    {
+        num: 7,
+        title: 'Vận hành & Hậu kiểm',
+        code: 'SLA/Retro',
+        primaryTab: 'operations' as const,
+        primaryTabName: 'Vận Hành & SLA',
+        objective: 'Giám sát cam kết dịch vụ SLA Uptime 99.95%, xử lý sự cố, sổ cái kiểm toán bất biến và xuất hồ sơ nghiệm thu.',
+        color: 'from-cyan-600 to-cyan-500',
+        lightColor: 'bg-cyan-50 text-cyan-800 border-cyan-200'
+    },
 ];
 
 interface SDLCCreationTemplate {
@@ -380,6 +443,8 @@ export default function ProjectShow() {
     const [selectedDocPreview, setSelectedDocPreview] = useState<ProjectDoc | null>(null);
     const [editingDoc, setEditingDoc] = useState<ProjectDoc | null>(null);
     const [isCreateDocModalOpen, setIsCreateDocModalOpen] = useState(false);
+    const [isC4ModalOpen, setIsC4ModalOpen] = useState(false);
+    const [docLibraryPhaseFilter, setDocLibraryPhaseFilter] = useState<number | 'all'>('all');
     const [copiedSignatureHash, setCopiedSignatureHash] = useState(false);
     const [previewViewMode, setPreviewViewMode] = useState<'formatted' | 'raw'>('formatted');
     const [isGateChecklistOpen, setIsGateChecklistOpen] = useState(false);
@@ -530,6 +595,153 @@ export default function ProjectShow() {
     const isGate4Blocked = Boolean(currentGate?.gate_number === 4 && latestCi && (Number(latestCi.coverage_percentage) < 80 || latestCi.sast_status === 'failed'));
     const isGate5Blocked = Boolean(currentGate?.gate_number === 5 && unresolvedBlockers.length > 0);
     const isCurrentGateBlocked = Boolean(isGate4Blocked || isGate5Blocked);
+
+    const calculatePhaseHealth = (phaseNum: number) => {
+        const phaseData = project.phases.find(p => p.phase_number === phaseNum);
+        const gateData = project.quality_gates.find(g => g.gate_number === phaseNum);
+        const isPassed = gateData?.status === 'passed' || phaseNum < project.current_phase_number;
+        const isCurrent = phaseNum === project.current_phase_number;
+
+        const phaseDocs = project.documents.filter(d => d.phase_number === phaseNum);
+        const approvedDocs = phaseDocs.filter(d => d.status === 'approved');
+        const docCount = phaseDocs.length;
+        const approvedCount = approvedDocs.length;
+
+        const checklistEntries = gateData?.criteria_checklist ? Object.entries(gateData.criteria_checklist) : [];
+        const passedCriteriaCount = checklistEntries.filter(([_, passed]) => passed).length;
+        const totalCriteriaCount = checklistEntries.length;
+
+        let dynamicRate = phaseData?.completion_rate || 0;
+        let operationalMetric = '';
+        let isBlocked = false;
+        let blockerReason = '';
+
+        if (isPassed) {
+            dynamicRate = 100;
+            operationalMetric = 'Đã Nghiệm Thu & Vượt Cổng';
+        } else {
+            const docRate = docCount > 0 ? (approvedCount / docCount) : 0;
+            const gateRate = totalCriteriaCount > 0 ? (passedCriteriaCount / totalCriteriaCount) : 0;
+
+            switch (phaseNum) {
+                case 1: {
+                    const rtmCount = project.rtm_traces?.length || 0;
+                    const opRate = Math.min(1, rtmCount / 3);
+                    dynamicRate = Math.round((docRate * 45) + (gateRate * 35) + (opRate * 20));
+                    operationalMetric = `${rtmCount} Yêu cầu RTM`;
+                    break;
+                }
+                case 2: {
+                    dynamicRate = Math.round((docRate * 55) + (gateRate * 45));
+                    const hasSad = phaseDocs.some(d => d.doc_type === 'SAD');
+                    operationalMetric = hasSad ? 'Sơ đồ C4 Sẵn Sàng' : 'Chưa có SAD';
+                    break;
+                }
+                case 3: {
+                    const raciCount = project.raci_assignments?.length || 0;
+                    const opRate = Math.min(1, raciCount / 4);
+                    dynamicRate = Math.round((docRate * 35) + (gateRate * 35) + (opRate * 30));
+                    operationalMetric = `${raciCount} Phân công RACI`;
+                    break;
+                }
+                case 4: {
+                    const tasks = project.tasks || [];
+                    const taskDone = tasks.filter(t => t.status === 'done').length;
+                    const taskRate = tasks.length > 0 ? (taskDone / tasks.length) : 0.3;
+                    let ciRate = 0;
+                    if (latestCi) {
+                        const covScore = Math.min(1, Number(latestCi.coverage_percentage) / 100);
+                        const sastScore = latestCi.sast_status === 'passed' ? 1 : 0.2;
+                        ciRate = (covScore * 0.7) + (sastScore * 0.3);
+                        operationalMetric = `CI ${latestCi.coverage_percentage}% • SAST ${latestCi.sast_status.toUpperCase()}`;
+                    } else {
+                        operationalMetric = 'Chưa có CI Pipeline';
+                    }
+                    if (isGate4Blocked) {
+                        isBlocked = true;
+                        blockerReason = 'Coverage < 80% hoặc SAST chưa đạt';
+                    }
+                    dynamicRate = Math.round((docRate * 25) + (gateRate * 25) + (taskRate * 25) + (ciRate * 25));
+                    break;
+                }
+                case 5: {
+                    const testRunCount = project.test_runs?.length || 0;
+                    const testRunRate = testRunCount > 0 ? 1 : 0;
+                    if (isGate5Blocked) {
+                        isBlocked = true;
+                        blockerReason = `Còn ${unresolvedBlockers.length} lỗi Blocker/Critical`;
+                    }
+                    operationalMetric = `${testRunCount} Test Runs • ${unresolvedBlockers.length} Blocker`;
+                    const blockerPenalty = unresolvedBlockers.length * 20;
+                    dynamicRate = Math.max(0, Math.round((docRate * 30) + (gateRate * 30) + (testRunRate * 40) - blockerPenalty));
+                    break;
+                }
+                case 6: {
+                    const cabApproved = project.cab_signoffs?.filter(s => s.decision === 'approved').length || 0;
+                    const rollout = project.deployment_rollouts?.[0];
+                    const traffic = rollout ? Number(rollout.traffic_percentage) : 0;
+                    operationalMetric = `CAB: ${cabApproved}/3 • Canary: ${traffic}%`;
+                    dynamicRate = Math.round((docRate * 30) + (gateRate * 30) + (Math.min(1, cabApproved / 3) * 20) + (Math.min(1, traffic / 100) * 20));
+                    break;
+                }
+                case 7: {
+                    const uptime = slaMetrics?.uptime_percentage || 100;
+                    const openIncidents = (project.production_incidents || []).filter(i => i.status !== 'resolved').length;
+                    operationalMetric = `Uptime: ${uptime}% • ${openIncidents} Sự cố`;
+                    dynamicRate = Math.round((docRate * 40) + (openIncidents === 0 ? 40 : 10) + 20);
+                    break;
+                }
+            }
+
+            dynamicRate = Math.min(99, Math.max(0, dynamicRate));
+        }
+
+        return {
+            rate: dynamicRate,
+            isPassed,
+            isCurrent,
+            isBlocked,
+            blockerReason,
+            docCount,
+            approvedCount,
+            passedCriteriaCount,
+            totalCriteriaCount,
+            operationalMetric,
+        };
+    };
+
+    const enhancedPhases = React.useMemo(() => {
+        return project.phases.map(p => {
+            const health = calculatePhaseHealth(p.phase_number);
+            return {
+                ...p,
+                completion_rate: health.rate,
+            };
+        });
+    }, [project, latestCi, unresolvedBlockers, slaMetrics]);
+
+    const handleSelectPhase = (phaseNum: number) => {
+        setSelectedPhaseNum(phaseNum);
+        if (activeTab === 'deliverables') {
+            setDocLibraryPhaseFilter(phaseNum);
+        }
+    };
+
+    const handleJumpToPhaseWorkspace = (phaseNum: number) => {
+        const meta = PHASE_METADATA.find(p => p.num === phaseNum);
+        if (!meta) return;
+        setSelectedPhaseNum(phaseNum);
+        if (meta.primaryTab === 'deliverables') {
+            setDocLibraryPhaseFilter(phaseNum);
+        }
+        setActiveTab(meta.primaryTab as any);
+    };
+
+    const handleJumpToPhaseDocs = (phaseNum: number) => {
+        setSelectedPhaseNum(phaseNum);
+        setDocLibraryPhaseFilter(phaseNum);
+        setActiveTab('deliverables');
+    };
 
     const handleLogDefect = (e: React.FormEvent) => {
         e.preventDefault();
@@ -868,9 +1080,9 @@ export default function ProjectShow() {
             projectNavItems={SDLC_NAV_ITEMS}
             activeProjectTab={activeTab}
             onSelectProjectTab={(tabId) => setActiveTab(tabId as any)}
-            phases={project.phases}
+            phases={enhancedPhases}
             selectedPhaseNum={selectedPhaseNum}
-            onSelectPhaseNum={(num) => setSelectedPhaseNum(num)}
+            onSelectPhaseNum={(num) => handleSelectPhase(num)}
             breadcrumbs={[
                 { label: 'Quản Trị Dự Án & SDLC', href: '/projects?tab=projects' },
                 { label: project.code, href: `/projects/${project.id}` },
@@ -926,253 +1138,483 @@ export default function ProjectShow() {
                 </div>
             }
         >
-            {/* 7-PHASE SDLC STEPPER RIBBON (Semantic <nav>) */}
-                    <nav aria-label="Quy trình 7 pha SDLC" className="fluent-compact-card p-1.5 mb-3 border border-white/80 shadow-xs">
-                        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-                            {PHASE_METADATA.map((meta) => {
-                                const phaseData = project.phases.find(p => p.phase_number === meta.num);
-                                const gateData = project.quality_gates.find(g => g.gate_number === meta.num);
-                                const isPassed = gateData?.status === 'passed' || meta.num < project.current_phase_number;
-                                const isCurrent = meta.num === project.current_phase_number;
-                                const isSelected = selectedPhaseNum === meta.num;
-                                const completionRate = phaseData?.completion_rate || (isPassed ? 100 : 0);
-
-                                return (
-                                    <button
-                                        key={meta.num}
-                                        type="button"
-                                        onClick={() => setSelectedPhaseNum(meta.num)}
-                                        aria-current={isSelected ? 'step' : undefined}
-                                        className={`flex-1 min-w-[125px] px-2.5 py-1.5 rounded-lg text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
-                                            isSelected
-                                                ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                                                : isPassed
-                                                ? 'bg-emerald-50/70 hover:bg-emerald-100/70 text-slate-800 border border-emerald-200/60'
-                                                : isCurrent
-                                                ? 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-900 border border-blue-200/70'
-                                                : 'bg-white/60 hover:bg-white text-slate-500 border border-slate-200/40'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-1.5 min-w-0">
-                                            {isPassed ? (
-                                                <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-600'}`} />
-                                            ) : isCurrent ? (
-                                                <Clock className={`w-3.5 h-3.5 shrink-0 animate-pulse ${isSelected ? 'text-white' : 'text-blue-600'}`} />
-                                            ) : (
-                                                <Lock className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-slate-300'}`} />
-                                            )}
-                                            <div className="truncate">
-                                                <div className="text-[11px] font-bold leading-tight truncate">
-                                                    P{meta.num}: {meta.code}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <span className={`text-[10px] font-mono px-1 py-0.2 rounded-sm font-semibold shrink-0 ${
-                                            isSelected
-                                                ? 'bg-white/20 text-white'
-                                                : isPassed
-                                                ? 'bg-emerald-100 text-emerald-800'
-                                                : isCurrent
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'bg-slate-100 text-slate-500'
-                                        }`}>
-                                            {completionRate}%
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </nav>
-
-                    {/* SELECTED PHASE & QUALITY GATEKEEPER MODULE (Semantic <aside>) */}
-                    {currentGate && (() => {
-                        const checklistEntries = currentGate.criteria_checklist ? Object.entries(currentGate.criteria_checklist) : [];
-                        const passedCriteriaCount = checklistEntries.filter(([_, passed]) => passed).length;
-                        const totalCriteriaCount = checklistEntries.length;
+            {/* 7-PHASE SDLC STEPPER & WORKSPACE NAVIGATOR */}
+            <nav aria-label="Quy trình 7 pha SDLC" className="fluent-compact-card p-2 mb-3 border border-white/80 shadow-xs bg-white/80">
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+                    {PHASE_METADATA.map((meta) => {
+                        const health = calculatePhaseHealth(meta.num);
+                        const isSelected = selectedPhaseNum === meta.num;
 
                         return (
-                            <aside aria-label="Cổng kiểm soát chất lượng" className="fluent-compact-card p-3 mb-3 border-l-4 border-l-blue-600 shadow-xs">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="fluent-badge-sm bg-blue-50 text-blue-700 border border-blue-200 font-bold flex items-center gap-1">
-                                            <ShieldCheck className="w-3.5 h-3.5" />
-                                            Gate {currentGate.gate_number}
-                                        </span>
-                                        <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
-                                            {currentGate.name}
-                                        </h2>
-                                        <span className="text-[11px] text-slate-500">
-                                            Pha: <strong className="text-slate-700 font-medium">{PHASE_METADATA[selectedPhaseNum - 1]?.title}</strong>
-                                        </span>
-                                        <span className="text-slate-300 hidden md:inline">•</span>
-                                        <span className="text-[11px] text-slate-500">
-                                            Thẩm quyền: <strong className="text-blue-700 font-semibold">{currentGate.required_role}</strong>
-                                        </span>
-                                    </div>
-
-                                    {/* Gate Status, Checklist Toggle & Signoff Action */}
-                                    <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
-                                        {totalCriteriaCount > 0 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsGateChecklistOpen(!isGateChecklistOpen)}
-                                                className={`px-2 py-1 text-[11px] font-semibold rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
-                                                    isGateChecklistOpen
-                                                        ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <span>Tiêu chí ({passedCriteriaCount}/{totalCriteriaCount})</span>
-                                                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isGateChecklistOpen ? 'rotate-180' : ''}`} />
-                                            </button>
-                                        )}
-
-                                        {currentGate.status === 'passed' ? (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold">
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                <span>Đã Ký Duyệt</span>
-                                                <span className="text-[10px] font-mono text-emerald-700 font-normal">({currentGate.sign_off_by})</span>
-                                            </div>
+                            <button
+                                key={meta.num}
+                                type="button"
+                                onClick={() => handleSelectPhase(meta.num)}
+                                aria-current={isSelected ? 'step' : undefined}
+                                className={`flex-1 min-w-[130px] p-2 rounded-xl text-left transition-all cursor-pointer flex flex-col justify-between gap-1 border ${
+                                    isSelected
+                                        ? 'bg-blue-600 text-white shadow-md border-blue-600 ring-2 ring-blue-300/50'
+                                        : health.isPassed
+                                        ? 'bg-emerald-50/70 hover:bg-emerald-100/70 text-slate-800 border-emerald-200/80'
+                                        : health.isBlocked
+                                        ? 'bg-rose-50/80 hover:bg-rose-100/80 text-rose-950 border-rose-300'
+                                        : health.isCurrent
+                                        ? 'bg-blue-50/90 hover:bg-blue-100/90 text-blue-950 border-blue-300'
+                                        : 'bg-white/70 hover:bg-white text-slate-600 border-slate-200/60'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        {health.isPassed ? (
+                                            <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-600'}`} />
+                                        ) : health.isBlocked ? (
+                                            <ShieldAlert className={`w-3.5 h-3.5 shrink-0 animate-bounce ${isSelected ? 'text-white' : 'text-rose-600'}`} />
+                                        ) : health.isCurrent ? (
+                                            <Clock className={`w-3.5 h-3.5 shrink-0 animate-pulse ${isSelected ? 'text-white' : 'text-blue-600'}`} />
                                         ) : (
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleAiEvaluateGate(currentGate.id)}
-                                                    disabled={isEvaluatingGate}
-                                                    className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                                                    title="AI tự động kiểm tra tài liệu, độ bao phủ test, SAST và đánh dấu tiêu chí đạt chuẩn"
-                                                >
-                                                    <Sparkles className={`w-3 h-3 text-indigo-600 ${isEvaluatingGate ? 'animate-spin' : ''}`} />
-                                                    <span>{isEvaluatingGate ? 'Đang Thẩm Định...' : '🤖 AI Thẩm Định Tiêu Chí'}</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRejectGate(currentGate.id)}
-                                                    className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors cursor-pointer"
-                                                >
-                                                    Từ Chối
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsApproveGateModalOpen(true)}
-                                                    className={`px-3 py-1 text-[11px] font-semibold flex items-center gap-1.5 rounded-lg cursor-pointer shadow-xs transition-all ${
-                                                        isCurrentGateBlocked
-                                                            ? 'bg-amber-600 hover:bg-amber-700 text-white font-bold'
-                                                            : 'fluent-button-primary'
-                                                    }`}
-                                                >
-                                                    {isCurrentGateBlocked ? (
-                                                        <>
-                                                            <ShieldAlert className="w-3.5 h-3.5" />
-                                                            <span>Ký Ghi Đè (SA Override)</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <KeyRound className="w-3.5 h-3.5" />
-                                                            <span>Ký Phê Duyệt Cổng</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
+                                            <Lock className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-slate-300'}`} />
                                         )}
+                                        <span className="text-[11px] font-bold leading-tight truncate">
+                                            P{meta.num}: {meta.code}
+                                        </span>
                                     </div>
+
+                                    <span className={`text-[10px] font-mono px-1 py-0.2 rounded-sm font-bold shrink-0 ${
+                                        isSelected
+                                            ? 'bg-white/20 text-white'
+                                            : health.isPassed
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : health.isBlocked
+                                            ? 'bg-rose-100 text-rose-800'
+                                            : health.isCurrent
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : 'bg-slate-100 text-slate-500'
+                                    }`}>
+                                        {health.rate}%
+                                    </span>
                                 </div>
 
-                                {/* Gate Enforcer Warnings */}
-                                {isGate4Blocked && (
-                                    <div className="mt-2.5 p-2.5 rounded-lg bg-amber-50/90 border border-amber-200 text-amber-900 flex items-center justify-between gap-2.5 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                            <p className="text-amber-800 leading-snug">
-                                                <strong>Khóa Cổng 4 (Quality & Security Baseline):</strong> Test Coverage <strong>{latestCi?.coverage_percentage}%</strong> (tiêu chuẩn &ge; 80%) hoặc SAST <strong>{latestCi?.sast_status?.toUpperCase()}</strong> chưa đạt.
-                                            </p>
-                                        </div>
+                                <div className="flex items-center justify-between gap-1 text-[10px] truncate opacity-90">
+                                    <span className="truncate">
+                                        {health.isPassed ? 'Đã duyệt qua cổng' : `${health.approvedCount}/${health.docCount} hồ sơ`}
+                                    </span>
+                                    {health.isCurrent && !isSelected && (
+                                        <span className="text-[9px] font-extrabold uppercase text-blue-600 bg-blue-100 px-1 rounded-sm shrink-0">
+                                            Hiện Tại
+                                        </span>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </nav>
+
+            {/* SELECTED PHASE WORKSPACE & QUICK ACTIONS HUB */}
+            {(() => {
+                const selectedMeta = PHASE_METADATA[selectedPhaseNum - 1] || PHASE_METADATA[0];
+                const selectedHealth = calculatePhaseHealth(selectedPhaseNum);
+                const isPrimaryTabActive = activeTab === selectedMeta.primaryTab;
+
+                return (
+                    <aside aria-label="Bảng điều khiển ngữ cảnh pha SDLC" className="fluent-compact-card p-3 mb-3 border border-slate-200/90 bg-white/95 shadow-xs space-y-2.5">
+                        {/* Row 1: Phase Identity, Objective & Live Health Status */}
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-bold">
+                                    Pha {selectedPhaseNum}
+                                </span>
+                                <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                                    {selectedMeta.title}
+                                </h2>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                    selectedHealth.isPassed
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : selectedHealth.isCurrent
+                                        ? 'bg-blue-50 text-blue-700 border border-blue-200 animate-pulse'
+                                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                }`}>
+                                    {selectedHealth.isPassed ? '✓ Đã Hoàn Thành' : selectedHealth.isCurrent ? '⚡ Đang Thực Thi' : 'Chờ Kích Hoạt'}
+                                </span>
+                                <span className="text-[11px] text-slate-500 hidden md:inline">
+                                    — {selectedMeta.objective}
+                                </span>
+                            </div>
+
+                            {/* Live Health Chips */}
+                            <div className="flex items-center gap-2 flex-wrap text-xs">
+                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-700 text-[11px]">
+                                    <FileText className="w-3 h-3 text-blue-600" />
+                                    <span>Hồ sơ: <strong className="text-slate-900">{selectedHealth.approvedCount}/{selectedHealth.docCount}</strong> đã duyệt</span>
+                                </div>
+
+                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-700 text-[11px]">
+                                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                    <span>Cổng: <strong className="text-slate-900">{selectedHealth.passedCriteriaCount}/{selectedHealth.totalCriteriaCount}</strong> tiêu chí</span>
+                                </div>
+
+                                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200 text-slate-700 text-[11px]">
+                                    <Activity className="w-3 h-3 text-indigo-600" />
+                                    <span className="font-semibold text-slate-800">{selectedHealth.operationalMetric}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 2: Contextual Navigation & Functional Quick Actions */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                {/* Primary Workspace Jump Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleJumpToPhaseWorkspace(selectedPhaseNum)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                                        isPrimaryTabActive
+                                            ? 'bg-blue-600 text-white shadow-blue-500/20'
+                                            : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
+                                    }`}
+                                    title={`Mở ngay tab làm việc chính của Pha ${selectedPhaseNum}`}
+                                >
+                                    <Layers className="w-3.5 h-3.5" />
+                                    <span>Mở Workspace: {selectedMeta.primaryTabName}</span>
+                                    {isPrimaryTabActive && <span className="text-[10px] font-normal opacity-90">(Đang Mở)</span>}
+                                </button>
+
+                                {/* Filter Deliverables to this Phase */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleJumpToPhaseDocs(selectedPhaseNum)}
+                                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                                        activeTab === 'deliverables' && docLibraryPhaseFilter === selectedPhaseNum
+                                            ? 'bg-slate-800 text-white'
+                                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                                    }`}
+                                    title={`Lọc xem toàn bộ tài liệu kỹ thuật của Pha ${selectedPhaseNum}`}
+                                >
+                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Xem Hồ Sơ Pha {selectedPhaseNum} ({selectedHealth.docCount})</span>
+                                </button>
+
+                                {/* Phase-specific Direct Actions */}
+                                {selectedPhaseNum === 1 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddRtmModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Plus className="w-3 h-3 text-emerald-600" />
+                                            <span>Thêm Yêu Cầu RTM</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenCreateDocModal(1)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <FilePlus className="w-3 h-3 text-blue-600" />
+                                            <span>Tạo BRD / SRS</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {selectedPhaseNum === 2 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsC4ModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Cpu className="w-3.5 h-3.5 text-indigo-600" />
+                                            <span>Sơ Đồ C4 Model</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenCreateDocModal(2)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <FilePlus className="w-3 h-3 text-indigo-600" />
+                                            <span>Tạo SAD / ERD / OpenAPI</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {selectedPhaseNum === 3 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddRaciModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Plus className="w-3 h-3 text-emerald-600" />
+                                            <span>Bổ Sung RACI</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('kanban')}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Layers className="w-3.5 h-3.5 text-emerald-600" />
+                                            <span>Kế Hoạch Sprints</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {selectedPhaseNum === 4 && (
+                                    <>
                                         <button
                                             type="button"
                                             onClick={() => setIsCiMetricsModalOpen(true)}
-                                            className="px-2 py-0.5 text-[11px] font-semibold rounded bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 cursor-pointer whitespace-nowrap"
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors flex items-center gap-1 cursor-pointer"
                                         >
-                                            Mô Phỏng CI
+                                            <Zap className="w-3.5 h-3.5 text-amber-600" />
+                                            <span>Mô Phỏng CI Pipeline</span>
                                         </button>
-                                    </div>
-                                )}
-
-                                {isGate5Blocked && (
-                                    <div className="mt-2.5 p-2.5 rounded-lg bg-rose-50/90 border border-rose-200 text-rose-900 flex items-center justify-between gap-2.5 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            <Bug className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                                            <p className="text-rose-800 leading-snug">
-                                                <strong>Khóa Cổng 5 (QA Testing Baseline):</strong> Còn <strong>{unresolvedBlockers.length} lỗi nghiêm trọng</strong> ({unresolvedBlockers.map(b => b.defect_code).join(', ')}).
-                                            </p>
-                                        </div>
                                         <button
                                             type="button"
-                                            onClick={() => setActiveTab('defects')}
-                                            className="px-2 py-0.5 text-[11px] font-semibold rounded bg-white border border-rose-300 text-rose-800 hover:bg-rose-100 cursor-pointer whitespace-nowrap"
+                                            onClick={() => setIsGitWebhookModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
                                         >
-                                            Xử Lý Ngay
+                                            <GitBranch className="w-3.5 h-3.5 text-indigo-600" />
+                                            <span>Git Webhook</span>
                                         </button>
-                                    </div>
+                                    </>
                                 )}
 
-                                {/* Collapsible Interactive Gate Checklist */}
-                                {currentGate.criteria_checklist && isGateChecklistOpen && (
-                                    <div className="mt-3 pt-3 border-t border-slate-100 animate-fade-in">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                                                Tiêu chí thẩm tra trước khi qua cổng (Gate Criteria Checklist):
-                                            </h3>
-                                            {currentGate.status !== 'passed' && (
-                                                <span className="text-[10px] text-blue-600 font-medium">
-                                                    Nhấp vào checkbox để đánh dấu thẩm định tiêu chí
-                                                </span>
+                                {selectedPhaseNum === 5 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddDefectModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Bug className="w-3.5 h-3.5 text-rose-600" />
+                                            <span>Báo Lỗi Defect Mới</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('testing')}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <CheckSquare className="w-3.5 h-3.5 text-rose-600" />
+                                            <span>Chạy Test Run</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {selectedPhaseNum === 6 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPackageReleaseModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Package className="w-3.5 h-3.5 text-purple-600" />
+                                            <span>Đóng Gói Phát Hành</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenCreateDocModal(6)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <FilePlus className="w-3.5 h-3.5 text-purple-600" />
+                                            <span>Tạo Runbook</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {selectedPhaseNum === 7 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddIncidentModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-50 text-cyan-800 border border-cyan-200 hover:bg-cyan-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Activity className="w-3.5 h-3.5 text-cyan-600" />
+                                            <span>Ghi Nhận Sự Cố</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsDossierModalOpen(true)}
+                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Printer className="w-3.5 h-3.5 text-blue-600" />
+                                            <span>Xuất Hồ Sơ Nghiệm Thu</span>
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Batch Sign Phase Docs if unapproved exist */}
+                                {selectedHealth.approvedCount < selectedHealth.docCount && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleBatchSignPhase(selectedPhaseNum)}
+                                        disabled={isBatchSigning}
+                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                        title={`Ký số điện tử HMAC-SHA256 phê duyệt toàn bộ hồ sơ Pha ${selectedPhaseNum}`}
+                                    >
+                                        <BadgeCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                        <span>Ký Duyệt Hàng Loạt P{selectedPhaseNum}</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Quality Gate Controls in the same cohesive row */}
+                            {currentGate && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {currentGate.criteria_checklist && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsGateChecklistOpen(!isGateChecklistOpen)}
+                                            className={`px-2 py-1 text-[11px] font-semibold rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
+                                                isGateChecklistOpen
+                                                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                        >
+                                            <span>Tiêu chí Cổng ({selectedHealth.passedCriteriaCount}/{selectedHealth.totalCriteriaCount})</span>
+                                            <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isGateChecklistOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                    )}
+
+                                    {currentGate.status === 'passed' ? (
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold">
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                            <span>Gate {currentGate.gate_number} Đã Ký</span>
+                                            <span className="text-[10px] font-mono text-emerald-700 font-normal">({currentGate.sign_off_by})</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAiEvaluateGate(currentGate.id)}
+                                                disabled={isEvaluatingGate}
+                                                className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                                title="AI tự động kiểm tra tài liệu, độ bao phủ test, SAST và đánh dấu tiêu chí đạt chuẩn"
+                                            >
+                                                <Sparkles className={`w-3 h-3 text-indigo-600 ${isEvaluatingGate ? 'animate-spin' : ''}`} />
+                                                <span>{isEvaluatingGate ? 'Đang Thẩm Định...' : '🤖 AI Thẩm Định'}</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsApproveGateModalOpen(true)}
+                                                className={`px-3 py-1 text-[11px] font-semibold flex items-center gap-1.5 rounded-lg cursor-pointer shadow-xs transition-all ${
+                                                    isCurrentGateBlocked
+                                                        ? 'bg-amber-600 hover:bg-amber-700 text-white font-bold'
+                                                        : 'fluent-button-primary'
+                                                }`}
+                                            >
+                                                {isCurrentGateBlocked ? (
+                                                    <>
+                                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                                        <span>Ký Ghi Đè Gate {currentGate.gate_number}</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <KeyRound className="w-3.5 h-3.5" />
+                                                        <span>Ký Phê Duyệt Gate {currentGate.gate_number}</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Gate Blockers Warning Banners */}
+                        {isGate4Blocked && (
+                            <div className="p-2.5 rounded-lg bg-amber-50/90 border border-amber-200 text-amber-900 flex items-center justify-between gap-2.5 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <ShieldAlert className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                    <p className="text-amber-800 leading-snug">
+                                        <strong>Khóa Cổng 4 (Quality & Security Baseline):</strong> Test Coverage <strong>{latestCi?.coverage_percentage}%</strong> (tiêu chuẩn &ge; 80%) hoặc SAST <strong>{latestCi?.sast_status?.toUpperCase()}</strong> chưa đạt.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCiMetricsModalOpen(true)}
+                                    className="px-2 py-0.5 text-[11px] font-semibold rounded bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 cursor-pointer whitespace-nowrap"
+                                >
+                                    Mô Phỏng CI
+                                </button>
+                            </div>
+                        )}
+
+                        {isGate5Blocked && (
+                            <div className="p-2.5 rounded-lg bg-rose-50/90 border border-rose-200 text-rose-900 flex items-center justify-between gap-2.5 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <Bug className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                                    <p className="text-rose-800 leading-snug">
+                                        <strong>Khóa Cổng 5 (QA Testing Baseline):</strong> Còn <strong>{unresolvedBlockers.length} lỗi nghiêm trọng</strong> ({unresolvedBlockers.map(b => b.defect_code).join(', ')}).
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('defects')}
+                                    className="px-2 py-0.5 text-[11px] font-semibold rounded bg-white border border-rose-300 text-rose-800 hover:bg-rose-100 cursor-pointer whitespace-nowrap"
+                                >
+                                    Xử Lý Ngay
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Collapsible Interactive Gate Checklist */}
+                        {currentGate && currentGate.criteria_checklist && isGateChecklistOpen && (
+                            <div className="pt-2.5 border-t border-slate-100 animate-fade-in">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                        Tiêu chí thẩm tra trước khi qua cổng {currentGate.gate_number} ({currentGate.required_role}):
+                                    </h3>
+                                    {currentGate.status !== 'passed' && (
+                                        <span className="text-[10px] text-blue-600 font-medium">
+                                            Nhấp vào checkbox để đánh dấu thẩm định tiêu chí
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {Object.entries(currentGate.criteria_checklist).map(([criterion, passed], idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            disabled={currentGate.status === 'passed'}
+                                            onClick={() => handleToggleCriterion(currentGate.id, criterion, passed)}
+                                            className={`flex items-center gap-2 text-xs text-left p-2 rounded-lg border transition-all ${
+                                                passed
+                                                    ? 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900 font-medium'
+                                                    : 'bg-white/80 border-slate-200/60 text-slate-600 hover:border-blue-300'
+                                            } ${currentGate.status !== 'passed' ? 'cursor-pointer hover:shadow-xs' : 'cursor-default'}`}
+                                        >
+                                            {passed ? (
+                                                <CheckSquare className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                                            ) : (
+                                                <Square className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                                             )}
-                                        </div>
+                                            <span className="leading-snug text-[11px]">{criterion}</span>
+                                        </button>
+                                    ))}
+                                </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            {checklistEntries.map(([criterion, passed], idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    disabled={currentGate.status === 'passed'}
-                                                    onClick={() => handleToggleCriterion(currentGate.id, criterion, passed)}
-                                                    className={`flex items-center gap-2 text-xs text-left p-2 rounded-lg border transition-all ${
-                                                        passed
-                                                            ? 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900 font-medium'
-                                                            : 'bg-white/80 border-slate-200/60 text-slate-600 hover:border-blue-300'
-                                                    } ${currentGate.status !== 'passed' ? 'cursor-pointer hover:shadow-xs' : 'cursor-default'}`}
-                                                >
-                                                    {passed ? (
-                                                        <CheckSquare className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                                                    ) : (
-                                                        <Square className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                                    )}
-                                                    <span className="leading-snug text-[11px]">{criterion}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {currentGate.sign_off_notes && (
-                                            <div className="mt-2.5 p-2 rounded-lg bg-indigo-50/70 border border-indigo-100 text-[11px] text-indigo-900 font-mono whitespace-pre-line leading-relaxed">
-                                                {currentGate.sign_off_notes}
-                                            </div>
-                                        )}
+                                {currentGate.sign_off_notes && (
+                                    <div className="mt-2.5 p-2 rounded-lg bg-indigo-50/70 border border-indigo-100 text-[11px] text-indigo-900 font-mono whitespace-pre-line leading-relaxed">
+                                        {currentGate.sign_off_notes}
                                     </div>
                                 )}
-                            </aside>
-                        );
-                    })()}
-
+                            </div>
+                        )}
+                    </aside>
+                );
+            })()}
 
                 {/* TAB 1: TECHNICAL DELIVERABLES / DOCUMENTS */}
                 {activeTab === 'deliverables' && (
                     <DocumentLibrary
                         projectId={project.id}
                         documents={project.documents}
-                        phases={project.phases}
+                        phases={enhancedPhases}
                         qualityGates={project.quality_gates}
                         currentPhaseNumber={project.current_phase_number}
+                        selectedPhaseFilter={docLibraryPhaseFilter}
+                        onSelectPhaseFilter={(filter) => setDocLibraryPhaseFilter(filter)}
                         onViewDoc={(doc) => setSelectedDocPreview(doc)}
                         onEditDoc={(doc) => handleOpenEditDoc(doc)}
                         onSignDoc={(docId) => handleSignDocument(docId)}
@@ -1966,6 +2408,39 @@ export default function ProjectShow() {
                         </div>
                     </section>
                 )}
+
+            {/* Modal: Interactive C4 Model Architecture Viewer */}
+            {isC4ModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+                    <div className="fluent-card bg-white p-4 sm:p-6 max-w-5xl w-full max-h-[92vh] flex flex-col rounded-2xl shadow-2xl relative border border-white">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div className="flex items-center gap-2">
+                                <span className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                                    <Cpu className="w-5 h-5" />
+                                </span>
+                                <div>
+                                    <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                                        Sơ Đồ Kiến Trúc Hệ Thống (C4 Model Architecture)
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        Pha 2: Kiến Trúc & Thiết Kế • {project.code}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsC4ModalOpen(false)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto py-3">
+                            <C4DiagramViewer projectCode={project.code} projectName={project.name} />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal: AI Copilot Document Synthesis */}
             {isAiModalOpen && (

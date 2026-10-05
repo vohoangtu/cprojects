@@ -5,11 +5,13 @@ namespace App\Actions\AI;
 use App\Actions\Audit\RecordAuditLogAction;
 use App\Models\Project;
 use App\Models\ProjectDocument;
+use App\Services\AI\AIService;
 
 class GenerateSDLCDocumentAction
 {
     public function __construct(
         protected RecordAuditLogAction $recordAuditLogAction,
+        protected AIService $aiService,
     ) {}
 
     /**
@@ -25,9 +27,13 @@ class GenerateSDLCDocumentAction
     ): ProjectDocument {
         $timestamp = now()->format('Y-m-d H:i');
 
-        // Synthesize structured enterprise markdown based on document type
-        $generatedContent = match ($docType) {
-            'CHARTER' => <<<MARKDOWN
+        // Synthesize dynamic enterprise documentation using AI Service
+        $generatedContent = $this->aiService->synthesizeDocument($project, $docType, $topicPrompt);
+
+        if (empty(trim($generatedContent))) {
+            // Fallback template
+            $generatedContent = match ($docType) {
+                'CHARTER' => <<<MARKDOWN
 # Hiến Chương Dự Án (Project Charter)
 *Dự án: {$project->name} [{$project->code}]*  
 *Người khởi tạo & Giám đốc kỹ thuật: {$authorName} ({$authorRole})*  
@@ -49,7 +55,7 @@ class GenerateSDLCDocumentAction
 - **Lead Solution Architect**: {$authorName} - Chịu trách nhiệm toàn quyền về kiến trúc, an ninh và ký duyệt các Cổng Chất Lượng.
 MARKDOWN,
 
-            'STORIES' => <<<MARKDOWN
+                'STORIES' => <<<MARKDOWN
 # Danh Sách User Stories & Kịch Bản Kiểm Thử Hành Vi (Gherkin BDD)
 *Dự án: {$project->name} [{$project->code}]*  
 *Biên soạn bởi: {$authorName}* | *Chuẩn: Gherkin Behavior-Driven Development*
@@ -80,7 +86,7 @@ Feature: Chuyển Pha SDLC Hợp Lệ Có Chữ Ký Số
 - **Để**: Phát hiện ngay lập tức các yêu cầu chưa có kịch bản kiểm thử (RTM Gaps).
 MARKDOWN,
 
-            'BRD' => <<<MARKDOWN
+                'BRD' => <<<MARKDOWN
 # Tài Liệu Yêu Cầu Nghiệp Vụ (Business Requirements Document - BRD)
 *Dự án: {$project->name} [{$project->code}]*  
 *Biên soạn bởi: {$authorName} ({$authorRole})*  
@@ -102,7 +108,7 @@ MARKDOWN,
 - Tự động hóa 100% việc đối soát dữ liệu giữa các phân hệ.
 MARKDOWN,
 
-            'SRS' => <<<MARKDOWN
+                'SRS' => <<<MARKDOWN
 # Đặc Tả Yêu Cầu Phần Mềm (SRS - Chuẩn IEEE 830)
 *Dự án: {$project->name} [{$project->code}]*  
 *Biên soạn bởi: {$authorName} ({$authorRole})*  
@@ -138,7 +144,7 @@ Feature: {$topicPrompt}
 ```
 MARKDOWN,
 
-            'SAD' => <<<MARKDOWN
+                'SAD' => <<<MARKDOWN
 # Tài Liệu Thiết Kế Kiến Trúc Hệ Thống (SAD - C4 Model)
 *Dự án: {$project->name} [{$project->code}]*  
 *Kiến trúc sư trưởng: {$authorName}*
@@ -160,7 +166,7 @@ Hệ thống kết nối trực tiếp với cổng thanh toán đối tác, h�
 - Toàn bộ giao tiếp qua HTTPS TLS 1.3 và mTLS nội bộ giữa các microservices.
 MARKDOWN,
 
-            'ERD' => <<<MARKDOWN
+                'ERD' => <<<MARKDOWN
 # Đặc Tả Sơ Đồ Thực Thể Cơ Sở Dữ Liệu (Database ERD Specification)
 *Dự án: {$project->name} [{$project->code}]*  
 *Thiết kế CSDL: {$authorName}*
@@ -183,7 +189,7 @@ MARKDOWN,
 - Mã hóa toàn bộ dữ liệu nhạy cảm (PII) ở cấp độ Column Encryption (AES-256-GCM).
 MARKDOWN,
 
-            'OPENAPI' => <<<MARKDOWN
+                'OPENAPI' => <<<MARKDOWN
 # Đặc Tả Giao Diện Lập Trình Ứng Dụng (RESTful API OpenAPI 3.1)
 *Dự án: {$project->name} [{$project->code}]*  
 *Tác giả API: {$authorName}*
@@ -214,7 +220,7 @@ Content-Type: application/json
 - `429 Too Many Requests`: Vượt ngưỡng Rate-limit 120 req/phút/IP.
 MARKDOWN,
 
-            'STRIDE' => <<<MARKDOWN
+                'STRIDE' => <<<MARKDOWN
 # Mô Hình Đánh Giá Đe Dọa An Ninh Mạng (STRIDE Threat Model)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chuyên gia an ninh mạng: {$authorName}*
@@ -234,7 +240,7 @@ MARKDOWN,
 6. **Elevation of Privilege (Leo thang đặc quyền)**: Kiểm soát truy cập chặt chẽ theo RBAC/ABAC phân tầng đa cấp.
 MARKDOWN,
 
-            'WBS' => <<<MARKDOWN
+                'WBS' => <<<MARKDOWN
 # Cấu Trúc Phân Rã Công Việc (Work Breakdown Structure - WBS)
 *Dự án: {$project->name} [{$project->code}]*  
 *Quản trị dự án: {$authorName}*
@@ -256,7 +262,7 @@ MARKDOWN,
   - Viết Feature tests và cấu hình GitHub Actions pipeline.
 MARKDOWN,
 
-            'RISK' => <<<MARKDOWN
+                'RISK' => <<<MARKDOWN
 # Sổ Đăng Ký Rủi Ro & Kế Hoạch Ứng Phó (Risk Register & Contingency Plan)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chủ trì quản trị rủi ro: {$authorName}*
@@ -275,7 +281,7 @@ MARKDOWN,
 | **RSK-03** | Hiệu năng suy giảm khi tải đột biến | Vừa (2) | Cao (4) | 8 | Tích hợp Redis Caching, FrankenPHP Octane và Auto-scaling | DevOps Lead |
 MARKDOWN,
 
-            'CODING_STANDARDS' => <<<MARKDOWN
+                'CODING_STANDARDS' => <<<MARKDOWN
 # Quy Chuẩn Lập Trình & Đảm Bảo Chất Lượng Code (Coding Standards)
 *Dự án: {$project->name} [{$project->code}]*  
 *Trưởng nhóm công nghệ: {$authorName}*
@@ -297,7 +303,7 @@ MARKDOWN,
    - Tối ưu Bundle Size và loại bỏ re-render không cần thiết.
 MARKDOWN,
 
-            'UNIT_TEST_PLAN' => <<<MARKDOWN
+                'UNIT_TEST_PLAN' => <<<MARKDOWN
 # Kế Hoạch & Ma Trận Kiểm Thử Đơn Vị (Unit Test Plan & Coverage Baseline)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chịu trách nhiệm chất lượng: {$authorName}*
@@ -314,7 +320,7 @@ MARKDOWN,
 - 100% Pull Request phải vượt qua toàn bộ Test Suite trên GitHub Actions trước khi được phép Merge.
 MARKDOWN,
 
-            'STP' => <<<MARKDOWN
+                'STP' => <<<MARKDOWN
 # Kế Hoạch Kiểm Thử Phần Mềm (Software Test Plan - STP)
 *Dự án: {$project->name} [{$project->code}]*  
 *Trưởng nhóm QA & Thẩm định: {$authorName}*
@@ -333,7 +339,7 @@ MARKDOWN,
 3. **UAT Sign-off**: Xác nhận nghiệm thu từ đại diện khách hàng {$project->client_name}.
 MARKDOWN,
 
-            'UAT_RECORD' => <<<MARKDOWN
+                'UAT_RECORD' => <<<MARKDOWN
 # Biên Bản Nghiệm Thu Chấp Nhận Người Dùng (UAT Sign-Off Record)
 *Dự án: {$project->name} [{$project->code}]*  
 *Khách hàng nghiệm thu: {$project->client_name}* | *Đại diện kỹ thuật: {$authorName}*
@@ -353,7 +359,7 @@ MARKDOWN,
 Đại diện khách hàng xác nhận hệ thống hoạt động ổn định, thỏa mãn đầy đủ các yêu cầu nghiệp vụ đã cam kết tại BRD và SRS. Đủ điều kiện chuyển sang Pha 6 để triển khai sản xuất.
 MARKDOWN,
 
-            'RUNBOOK' => <<<MARKDOWN
+                'RUNBOOK' => <<<MARKDOWN
 # Kịch Bản Triển Khai Sản Xuất Từng Phút (Production Runbook)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chỉ huy triển khai Release: {$authorName}*
@@ -377,7 +383,7 @@ MARKDOWN,
   - Lệnh Rollback tự động chuyển hướng Traffic về cụm Blue trong vòng 3 phút (RTO <= 3m, RPO = 0).
 MARKDOWN,
 
-            'ROLLBACK_DR' => <<<MARKDOWN
+                'ROLLBACK_DR' => <<<MARKDOWN
 # Phương Án Phục Hồi Thảm Họa & Rollback Khẩn Cấp (Disaster Recovery Plan)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chỉ huy phục hồi thảm họa: {$authorName}*
@@ -395,7 +401,7 @@ MARKDOWN,
 3. **Rollback Database**: Chạy rollback migrations bằng script `php artisan migrate:rollback --step=1`.
 MARKDOWN,
 
-            'RELEASE_NOTES' => <<<MARKDOWN
+                'RELEASE_NOTES' => <<<MARKDOWN
 # Ghi Chú Phát Hành & Hướng Dẫn Nâng Cấp (Release Notes)
 *Dự án: {$project->name} [{$project->code}]*  
 *Người ký phát hành: {$authorName}*
@@ -415,7 +421,7 @@ MARKDOWN,
 Thực hiện chạy lệnh migration và kiểm tra log kết nối cơ sở dữ liệu sau khi deploy.
 MARKDOWN,
 
-            'SLA_MATRIX' => <<<MARKDOWN
+                'SLA_MATRIX' => <<<MARKDOWN
 # Ma Trận Cam Kết Chất Lượng Dịch Vụ (Service Level Agreement - SLA)
 *Dự án: {$project->name} [{$project->code}]*  
 *Đại diện kỹ thuật cam kết: {$authorName}*
@@ -434,7 +440,7 @@ MARKDOWN,
 | **P3 - Minor** | Lỗi hiển thị hoặc bất tiện nhỏ không ảnh hưởng logic chính | $\le 4\text{ giờ}$ | $\le 24\text{ giờ}$ |
 MARKDOWN,
 
-            'RETROSPECTIVE' => <<<MARKDOWN
+                'RETROSPECTIVE' => <<<MARKDOWN
 # Biên Bản Đánh Giá Hậu Kiểm & Rút Kinh Nghiệm (Retrospective / Post-Mortem)
 *Dự án: {$project->name} [{$project->code}]*  
 *Chủ trì phiên họp: {$authorName}*
@@ -457,20 +463,9 @@ MARKDOWN,
 - Cập nhật checklist cổng chất lượng Gate 2 và Gate 4 cho chu kỳ SDLC tiếp theo.
 MARKDOWN,
 
-            default => <<<MARKDOWN
-# Tài Liệu Kỹ Thuật Dự Án (Technical Specification)
-*Dự án: {$project->name} [{$project->code}]*  
-*Loại tài liệu: {$docType}* | *Tác giả: {$authorName}*
-
----
-
-## 1. Tóm tắt nội dung
-{$topicPrompt}
-
-## 2. Chi tiết thực thi
-Tài liệu được khởi tạo và kiểm soát phiên bản tự động theo quy trình SDLC chuẩn 2026.
-MARKDOWN,
-        };
+                default => "# TÀI LIỆU KỸ THUẬT: {$docType}\n\n{$topicPrompt}",
+            };
+        }
 
         // Create document
         $title = "Tài liệu AI: {$docType} - ".ucfirst(substr($topicPrompt, 0, 40));

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { SaaSLayout } from '@/Layouts/SaaSLayout';
 import { 
     Plus, 
@@ -26,7 +26,15 @@ import {
     Users,
     Award,
     Activity,
-    History
+    History,
+    FileText,
+    GitBranch,
+    CheckSquare,
+    Zap,
+    Send,
+    Bot,
+    ChevronRight,
+    Compass
 } from 'lucide-react';
 import { CorporateOverviewTab } from '@/Components/CorporateOverviewTab';
 import { CorporateWorkforceTab } from '@/Components/CorporateWorkforceTab';
@@ -119,10 +127,41 @@ const PHASE_NAMES = [
     'Hậu kiểm (SLA)'
 ];
 
+const PRESET_IDEAS = [
+    {
+        title: 'SmartBus - Vé Xe Buýt QR & GPS',
+        domain: 'Smart Mobility',
+        prompt: 'Xây dựng hệ thống vé xe buýt thông minh SmartBus tích hợp thanh toán mã QR động, thẻ NFC, định vị GPS phương tiện thời gian thực và tự động điều độ biểu đồ chạy xe.',
+    },
+    {
+        title: 'Core Banking - Napas 2.0 & FIDO2',
+        domain: 'Fintech',
+        prompt: 'Hiện đại hóa cổng thanh toán liên ngân hàng Core Banking Napas 2.0 với xác thực WebAuthn FIDO2, đối soát dữ liệu giao dịch tự động và kiến trúc microservices phân tán.',
+    },
+    {
+        title: 'CarePlus - Bệnh Án Điện Tử EMR',
+        domain: 'Healthcare',
+        prompt: 'Nền tảng hồ sơ bệnh án điện tử EMR và đặt lịch khám bệnh trực tuyến chuẩn HL7/FHIR, đơn thuốc điện tử và thanh toán viện phí không dùng tiền mặt.',
+    },
+    {
+        title: 'AgriNext - Sàn Nông Sản B2B & IoT',
+        domain: 'AgriTech',
+        prompt: 'Xây dựng sàn giao dịch và đấu giá nông sản B2B trực tiếp, quản lý chuỗi kho lạnh IoT bảo quản nhiệt độ và thanh toán bảo chứng ký quỹ ngân hàng.',
+    },
+];
+
 export default function ProjectIndex() {
     const { projects, recentAuditLogs = [], recentIncidents = [], initialTab = 'projects', flash } = usePage<any>().props as PageProps;
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isCorporateDossierOpen, setIsCorporateDossierOpen] = useState(false);
+
+    // AI Idea-to-SDLC Incubator States
+    const [creationMode, setCreationMode] = useState<'ai_incubator' | 'manual'>('ai_incubator');
+    const [ideaPrompt, setIdeaPrompt] = useState('');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState<any>(null);
+    const [isCreatingFromIdea, setIsCreatingFromIdea] = useState(false);
+    const [analysisTab, setAnalysisTab] = useState<'reqs' | 'architecture' | 'stories' | 'wbs'>('reqs');
 
     // Active Enterprise Corporate Subsystem
     const [activeSubsystem, setActiveSubsystem] = useState<string>(() => {
@@ -180,6 +219,59 @@ export default function ProjectIndex() {
         });
     };
 
+    const handleSelectPresetIdea = (preset: typeof PRESET_IDEAS[0]) => {
+        setIdeaPrompt(preset.prompt);
+    };
+
+    const handleAnalyzeIdea = async () => {
+        if (!ideaPrompt.trim()) return;
+        setIsAnalyzing(true);
+        setAnalysisResult(null);
+
+        try {
+            const response = await fetch('/projects/analyze-idea', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ idea_prompt: ideaPrompt }),
+            });
+
+            const resData = await response.json();
+            if (resData.success && resData.analysis) {
+                setAnalysisResult(resData.analysis);
+            } else {
+                alert('Không thể phân tích ý tưởng. Vui lòng thử lại.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Đã xảy ra lỗi khi gửi yêu cầu phân tích.');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleCreateFromIdeaSubmit = () => {
+        if (!ideaPrompt.trim() && !analysisResult) return;
+        setIsCreatingFromIdea(true);
+
+        router.post('/projects/create-from-idea', {
+            idea_prompt: ideaPrompt,
+            name: analysisResult?.name,
+            code: analysisResult?.code,
+            client_name: analysisResult?.client_name,
+            project_type: analysisResult?.project_type,
+            budget: analysisResult?.budget,
+        }, {
+            onFinish: () => {
+                setIsCreatingFromIdea(false);
+                setIsCreateModalOpen(false);
+            },
+        });
+    };
+
     // Filtered projects
     const filteredProjects = useMemo(() => {
         return projects.filter(p => {
@@ -224,6 +316,17 @@ export default function ProjectIndex() {
             headerActions={
                 <div className="flex items-center gap-2">
                     <button
+                        onClick={() => {
+                            setCreationMode('ai_incubator');
+                            setIsCreateModalOpen(true);
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-semibold hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title="Phân tích ý tưởng bằng AI và tự động sinh 7 pha SDLC"
+                    >
+                        <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                        <span>AI Ươm Mầm Ý Tưởng</span>
+                    </button>
+                    <button
                         onClick={() => setIsCorporateDossierOpen(true)}
                         className="px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                     >
@@ -231,7 +334,10 @@ export default function ProjectIndex() {
                         <span className="hidden sm:inline">Hồ Sơ SDLC Cty</span>
                     </button>
                     <button
-                        onClick={() => setIsCreateModalOpen(true)}
+                        onClick={() => {
+                            setCreationMode('manual');
+                            setIsCreateModalOpen(true);
+                        }}
                         className="fluent-button-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                         <Plus className="w-3.5 h-3.5" />
@@ -761,10 +867,10 @@ export default function ProjectIndex() {
                 </div>
             )}
 
-            {/* Create Project Modal */}
+            {/* Create Project Modal & AI Idea Incubator */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-                    <div className="fluent-card bg-white p-6 max-w-lg w-full rounded-2xl shadow-2xl relative border border-white">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                    <div className="fluent-card bg-white p-5 sm:p-6 max-w-3xl w-full max-h-[92vh] flex flex-col rounded-2xl shadow-2xl relative border border-white">
                         <button
                             onClick={() => setIsCreateModalOpen(false)}
                             className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer"
@@ -772,108 +878,391 @@ export default function ProjectIndex() {
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="flex items-center gap-3 mb-5">
-                            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
-                                <Plus className="w-5 h-5" />
+                        {/* Modal Header */}
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs">
+                                <Sparkles className="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900">Khởi Tạo Dự Án SDLC Mới</h3>
-                                <p className="text-xs text-slate-500">Tự động cấu hình 7 Pha, 6 Quality Gates và Ma trận RACI</p>
+                                <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                                    Khởi Tạo & Ươm Mầm Dự Án SDLC 2026
+                                </h3>
+                                <p className="text-xs text-slate-500">
+                                    Phân tích ý tưởng bằng AI, bóc tách yêu cầu và tự động thiết lập 7 pha SDLC
+                                </p>
                             </div>
                         </div>
 
-                        <form onSubmit={handleCreateProject} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Tên Dự Án *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="vd: Cổng Thanh Toán Quốc Tế PayNext 2026"
-                                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                />
-                                {errors.name && <span className="text-[11px] text-rose-500">{errors.name}</span>}
-                            </div>
+                        {/* Mode Switcher Tabs */}
+                        <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl mb-4 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setCreationMode('ai_incubator')}
+                                className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                    creationMode === 'ai_incubator'
+                                        ? 'bg-white text-blue-700 shadow-xs'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                            >
+                                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                                <span>✨ Ươm Mầm Bằng AI (Idea-to-SDLC Incubator)</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCreationMode('manual')}
+                                className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                    creationMode === 'manual'
+                                        ? 'bg-white text-slate-900 shadow-xs'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                            >
+                                <Plus className="w-3.5 h-3.5 text-slate-600" />
+                                <span>✍️ Nhập Thủ Công (Manual Setup)</span>
+                            </button>
+                        </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                        {/* Mode 1: AI Idea Incubator */}
+                        {creationMode === 'ai_incubator' && (
+                            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Mã Dự Án (Code)</label>
-                                    <input
-                                        type="text"
-                                        value={data.code}
-                                        onChange={(e) => setData('code', e.target.value)}
-                                        placeholder="vd: PRJ-PAY-2026"
-                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                                    />
+                                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                                        Mô Tả Ý Tưởng / Bài Toán Nghiệp Vụ Của Bạn:
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={ideaPrompt}
+                                        onChange={(e) => setIdeaPrompt(e.target.value)}
+                                        placeholder="vd: Xây dựng hệ sinh thái vé xe buýt thông minh SmartBus tích hợp mã QR động, thẻ NFC, định vị GPS phương tiện thời gian thực và tự động điều độ biểu đồ chạy xe..."
+                                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-slate-50/50 leading-relaxed font-sans"
+                                    ></textarea>
+
+                                    {/* Preset Idea Chips */}
+                                    <div className="mt-2">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                            Hoặc chọn ý tưởng mẫu để thử nghiệm nhanh:
+                                        </span>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {PRESET_IDEAS.map((preset, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => handleSelectPresetIdea(preset)}
+                                                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border border-slate-200/60 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer flex items-center gap-1"
+                                                >
+                                                    <Compass className="w-3 h-3 text-blue-500" />
+                                                    <span>{preset.title}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Analyze Button */}
+                                    <div className="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleAnalyzeIdea}
+                                            disabled={isAnalyzing || !ideaPrompt.trim()}
+                                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-bold hover:shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-xs"
+                                        >
+                                            <Sparkles className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                                            <span>{isAnalyzing ? 'Đang Phân Tích & Bóc Tách Yêu Cầu...' : '🤖 AI Phân Tích Ý Tưởng & Bóc Tách SDLC'}</span>
+                                        </button>
+                                    </div>
                                 </div>
+
+                                {/* Loading Animation State */}
+                                {isAnalyzing && (
+                                    <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 animate-pulse space-y-2">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-blue-800">
+                                            <Bot className="w-4 h-4 text-blue-600 animate-bounce" />
+                                            <span>AI Lead Architect đang phân tích bài toán...</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-[11px] text-blue-700">
+                                            <div className="flex items-center gap-1">✓ Nhận diện Actors & Lĩnh vực</div>
+                                            <div className="flex items-center gap-1">✓ Bóc tách Functional Requirements</div>
+                                            <div className="flex items-center gap-1">✓ Đề xuất kiến trúc C4 Containers</div>
+                                            <div className="flex items-center gap-1">✓ Phân rã WBS theo 7 pha SDLC</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Analysis Result Card & Breakdown */}
+                                {analysisResult && (
+                                    <div className="space-y-3 pt-3 border-t border-slate-100 animate-fade-in">
+                                        {/* Result Header Badge Card */}
+                                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-mono text-[11px] font-bold">
+                                                            {analysisResult.code}
+                                                        </span>
+                                                        <h4 className="text-sm font-bold text-slate-900">
+                                                            {analysisResult.name}
+                                                        </h4>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 mt-0.5">
+                                                        Lĩnh vực: <strong className="text-slate-800">{analysisResult.domain}</strong> • Khách hàng: <strong className="text-slate-800">{analysisResult.client_name}</strong>
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 text-xs shrink-0">
+                                                    <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-mono font-bold">
+                                                        ${Number(analysisResult.budget || 250000).toLocaleString()} USD
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <p className="text-xs text-slate-600 leading-relaxed bg-white p-2.5 rounded-lg border border-slate-200/60 font-sans">
+                                                {analysisResult.summary}
+                                            </p>
+                                        </div>
+
+                                        {/* Analysis Sub-Tabs */}
+                                        <div className="flex items-center gap-1.5 border-b border-slate-200 pb-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAnalysisTab('reqs')}
+                                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    analysisTab === 'reqs'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                Yêu Cầu Chức Năng ({analysisResult.functional_requirements?.length || 0})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAnalysisTab('architecture')}
+                                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    analysisTab === 'architecture'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                Kiến Trúc & Tech Stack
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAnalysisTab('stories')}
+                                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    analysisTab === 'stories'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                User Stories ({analysisResult.user_stories?.length || 0})
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAnalysisTab('wbs')}
+                                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                                                    analysisTab === 'wbs'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                }`}
+                                            >
+                                                Kế Hoạch 7 Pha (WBS)
+                                            </button>
+                                        </div>
+
+                                        {/* Sub-tab 1: Functional Requirements */}
+                                        {analysisTab === 'reqs' && (
+                                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                                {analysisResult.functional_requirements?.map((req: any, idx: number) => (
+                                                    <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 flex items-start justify-between gap-2 text-xs">
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-mono font-bold text-blue-700">{req.code}</span>
+                                                                <strong className="text-slate-900">{req.title}</strong>
+                                                            </div>
+                                                            <p className="text-[11px] text-slate-500 mt-0.5">{req.description}</p>
+                                                        </div>
+                                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-100 text-blue-800 shrink-0">
+                                                            {req.priority || 'High'}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Sub-tab 2: Architecture & Tech Stack */}
+                                        {analysisTab === 'architecture' && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                                {analysisResult.architecture_recommendation && Object.entries(analysisResult.architecture_recommendation).map(([k, v], idx) => (
+                                                    <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70">
+                                                        <span className="text-[10px] font-bold uppercase text-slate-400 block">{k}</span>
+                                                        <span className="font-semibold text-slate-800 text-[11px]">{String(v)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Sub-tab 3: User Stories & BDD */}
+                                        {analysisTab === 'stories' && (
+                                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                                {analysisResult.user_stories?.map((st: any, idx: number) => (
+                                                    <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 text-xs space-y-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-mono font-bold text-indigo-700">{st.code}</span>
+                                                            <span className="text-[11px] text-slate-500">Đối tượng: <strong>{st.role}</strong></span>
+                                                        </div>
+                                                        <p className="text-[11px] text-slate-700">
+                                                            Là <strong>{st.role}</strong>, tôi muốn <strong>{st.action}</strong> để <strong>{st.benefit}</strong>.
+                                                        </p>
+                                                        {st.gherkin && (
+                                                            <pre className="p-2 rounded bg-slate-800 text-slate-100 text-[10px] font-mono whitespace-pre-wrap">
+                                                                {st.gherkin}
+                                                            </pre>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Sub-tab 4: WBS Phases */}
+                                        {analysisTab === 'wbs' && (
+                                            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                {analysisResult.wbs_phases?.map((wb: any, idx: number) => (
+                                                    <div key={idx} className="p-2 rounded-lg bg-slate-50 border border-slate-200/70 flex items-center justify-between text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px]">
+                                                                Pha {wb.phase}
+                                                            </span>
+                                                            <span className="text-slate-800 font-medium">{wb.task}</span>
+                                                        </div>
+                                                        <span className="font-mono text-slate-500 text-[11px] shrink-0 font-semibold">
+                                                            {wb.estimated_hours}h
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Action Button: Create Project from Analyzed Idea */}
+                                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAnalysisResult(null)}
+                                                className="text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer"
+                                            >
+                                                Nhập lại ý tưởng
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleCreateFromIdeaSubmit}
+                                                disabled={isCreatingFromIdea}
+                                                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs font-bold hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow-md"
+                                            >
+                                                <Sparkles className={`w-4 h-4 ${isCreatingFromIdea ? 'animate-spin' : ''}`} />
+                                                <span>
+                                                    {isCreatingFromIdea
+                                                        ? 'Đang Khởi Tạo & Sinh 16+ Hồ Sơ SDLC...'
+                                                        : '🚀 Khởi Tạo Dự Án & Tự Động Sinh Toàn Bộ Hồ Sơ 7 Pha SDLC'}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Mode 2: Traditional Manual Creation Form */}
+                        {creationMode === 'manual' && (
+                            <form onSubmit={handleCreateProject} className="flex-1 overflow-y-auto space-y-4 pr-1">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Khách Hàng / Đối Tác *</label>
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tên Dự Án *</label>
                                     <input
                                         type="text"
                                         required
-                                        value={data.client_name}
-                                        onChange={(e) => setData('client_name', e.target.value)}
-                                        placeholder="vd: Fintech Corp"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder="vd: Cổng Thanh Toán Quốc Tế PayNext 2026"
                                         className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                     />
+                                    {errors.name && <span className="text-[11px] text-rose-500">{errors.name}</span>}
                                 </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Mã Dự Án (Code)</label>
+                                        <input
+                                            type="text"
+                                            value={data.code}
+                                            onChange={(e) => setData('code', e.target.value)}
+                                            placeholder="vd: PRJ-PAY-2026"
+                                            className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Khách Hàng / Đối Tác *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={data.client_name}
+                                            onChange={(e) => setData('client_name', e.target.value)}
+                                            placeholder="vd: Fintech Corp"
+                                            className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Loại Hình</label>
+                                        <select
+                                            value={data.project_type}
+                                            onChange={(e) => setData('project_type', e.target.value as any)}
+                                            className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                        >
+                                            <option value="enterprise">Giải Pháp Doanh Nghiệp (Enterprise)</option>
+                                            <option value="product">Sản Phẩm Công Nghệ (Product)</option>
+                                            <option value="outsourcing">Gia Công Phần Mềm (Outsourcing)</option>
+                                            <option value="rnd">Nghiên Cứu Phát Triển (R&D)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-700 mb-1">Ngân Sách (USD)</label>
+                                        <input
+                                            type="number"
+                                            value={data.budget}
+                                            onChange={(e) => setData('budget', Number(e.target.value))}
+                                            className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Loại Hình</label>
-                                    <select
-                                        value={data.project_type}
-                                        onChange={(e) => setData('project_type', e.target.value as any)}
-                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Mục Tiêu & Mô Tả Dự Án</label>
+                                    <textarea
+                                        rows={2}
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        placeholder="Mô tả phạm vi và bài toán kinh doanh..."
+                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    ></textarea>
+                                </div>
+
+                                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                                     >
-                                        <option value="enterprise">Giải Pháp Doanh Nghiệp (Enterprise)</option>
-                                        <option value="product">Sản Phẩm Công Nghệ (Product)</option>
-                                        <option value="outsourcing">Gia Công Phần Mềm (Outsourcing)</option>
-                                        <option value="rnd">Nghiên Cứu Phát Triển (R&D)</option>
-                                    </select>
+                                        Hủy Bỏ
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="fluent-button-primary px-5 py-2 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                                    >
+                                        {processing ? 'Đang Khởi Tạo...' : 'Tạo Dự Án (Repository-Action)'}
+                                    </button>
                                 </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ngân Sách (USD)</label>
-                                    <input
-                                        type="number"
-                                        value={data.budget}
-                                        onChange={(e) => setData('budget', Number(e.target.value))}
-                                        className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">Mục Tiêu & Mô Tả Dự Án</label>
-                                <textarea
-                                    rows={2}
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Mô tả phạm vi và bài toán kinh doanh..."
-                                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                ></textarea>
-                            </div>
-
-                            <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsCreateModalOpen(false)}
-                                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                                >
-                                    Hủy Bỏ
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="fluent-button-primary px-5 py-2 text-xs font-semibold cursor-pointer disabled:opacity-50"
-                                >
-                                    {processing ? 'Đang Khởi Tạo...' : 'Tạo Dự Án (Repository-Action)'}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}

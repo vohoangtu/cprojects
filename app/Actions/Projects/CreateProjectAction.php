@@ -5,6 +5,7 @@ namespace App\Actions\Projects;
 use App\Actions\Audit\RecordAuditLogAction;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
+use App\Services\AI\AIService;
 use Illuminate\Support\Facades\DB;
 
 class CreateProjectAction
@@ -12,6 +13,7 @@ class CreateProjectAction
     public function __construct(
         protected ProjectRepositoryInterface $projectRepository,
         protected RecordAuditLogAction $recordAuditLogAction,
+        protected AIService $aiService,
     ) {}
 
     public function execute(array $data, string $creatorName = 'Lead Architect', string $creatorRole = 'Solution Architect'): Project
@@ -268,13 +270,22 @@ class CreateProjectAction
             ];
 
             foreach ($defaultDocs as $doc) {
+                $docContent = $this->aiService->synthesizeDocument(
+                    project: $project,
+                    docType: $doc['type'],
+                    topicPrompt: $data['description'] ?? '',
+                );
+                if (empty(trim($docContent))) {
+                    $docContent = $doc['content'];
+                }
+
                 $project->documents()->create([
                     'phase_number' => $doc['phase'],
                     'doc_type' => $doc['type'],
                     'title' => $doc['title'],
                     'version' => 'v1.0',
                     'status' => $doc['status'],
-                    'content' => $doc['content'],
+                    'content' => $docContent,
                     'signed_off_by' => $doc['status'] === 'approved' ? $creatorName : null,
                     'signed_off_at' => $doc['status'] === 'approved' ? now() : null,
                 ]);
@@ -302,15 +313,32 @@ class CreateProjectAction
                 ]);
             }
 
-            // 5. Default RTM (Requirements Traceability Matrix)
-            $defaultRtm = [
-                ['req_code' => 'REQ-AUTH-01', 'req_title' => 'Đăng nhập bảo mật WebAuthn & 2FA', 'story' => 'STORY-101', 'commit' => 'PR #12 (feat/auth)', 'test' => 'TC-SEC-01', 'defect' => null, 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
-                ['req_code' => 'REQ-GATE-02', 'req_title' => 'Ký số phê duyệt Quality Gate không thể chối bỏ', 'story' => 'STORY-108', 'commit' => 'PR #24 (feat/gate-signature)', 'test' => 'TC-GATE-03', 'defect' => null, 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
-                ['req_code' => 'REQ-RACI-03', 'req_title' => 'Ma trận trách nhiệm động theo từng công việc', 'story' => 'STORY-114', 'commit' => 'PR #31 (feat/raci)', 'test' => 'TC-RACI-02', 'defect' => 'BUG-14 (fixed)', 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
-                ['req_code' => 'REQ-DOC-04', 'req_title' => 'Trình soạn thảo kỹ thuật Markdown & Mermaid', 'story' => 'STORY-120', 'commit' => 'PR #39 (feat/markdown-mermaid)', 'test' => 'TC-DOC-01', 'defect' => null, 'release' => 'v1.0.0', 'status' => 'in_dev'],
-            ];
+            // 5. Tailored RTM (Requirements Traceability Matrix)
+            $ideaAnalysis = $this->aiService->analyzeIdea($data['description'] ?? $data['name']);
+            $customRtm = $ideaAnalysis['initial_rtm'] ?? [];
+            if (! empty($customRtm)) {
+                $rtmToCreate = array_map(function ($item) {
+                    return [
+                        'req_code' => $item['req_code'],
+                        'req_title' => $item['req_title'],
+                        'story' => $item['story'] ?? 'US-01',
+                        'commit' => 'Branch feat/'.strtolower(str_replace(' ', '-', (string) $item['req_code'])),
+                        'test' => $item['test'] ?? 'TC-01',
+                        'defect' => null,
+                        'release' => 'v1.0.0-rc1',
+                        'status' => 'in_dev',
+                    ];
+                }, $customRtm);
+            } else {
+                $rtmToCreate = [
+                    ['req_code' => 'REQ-AUTH-01', 'req_title' => 'Đăng nhập bảo mật WebAuthn & 2FA', 'story' => 'STORY-101', 'commit' => 'PR #12 (feat/auth)', 'test' => 'TC-SEC-01', 'defect' => null, 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
+                    ['req_code' => 'REQ-CORE-02', 'req_title' => 'Nghiệp vụ cốt lõi và giao dịch thời gian thực', 'story' => 'STORY-108', 'commit' => 'PR #24 (feat/core)', 'test' => 'TC-CORE-02', 'defect' => null, 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
+                    ['req_code' => 'REQ-INT-03', 'req_title' => 'Tích hợp hệ thống và cơ chế đối soát dữ liệu', 'story' => 'STORY-114', 'commit' => 'PR #31 (feat/integration)', 'test' => 'TC-INT-03', 'defect' => null, 'release' => 'v1.0.0-rc1', 'status' => 'passed'],
+                    ['req_code' => 'REQ-OPS-04', 'req_title' => 'Giám sát vận hành và cam kết chất lượng SLA', 'story' => 'STORY-120', 'commit' => 'PR #39 (feat/monitoring)', 'test' => 'TC-OPS-04', 'defect' => null, 'release' => 'v1.0.0', 'status' => 'in_dev'],
+                ];
+            }
 
-            foreach ($defaultRtm as $rtm) {
+            foreach ($rtmToCreate as $rtm) {
                 $project->rtmTraces()->create([
                     'req_code' => $rtm['req_code'],
                     'req_title' => $rtm['req_title'],
